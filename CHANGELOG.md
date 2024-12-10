@@ -1,5 +1,14 @@
 # Changelog
 
+## 7.0.5 (2024-12-10)
+
+## What's Changed
+* chore(deps): update dependency fabrictest/lix-quick-install-action to v7.0.4 by @renovate in https://github.com/fabrictest/lix-quick-install-action/pull/25
+* chore(deps): update actions/attest-build-provenance action to v2.1.0 by @renovate in https://github.com/fabrictest/lix-quick-install-action/pull/27
+
+
+**Full Changelog**: https://github.com/fabrictest/lix-quick-install-action/compare/v7.0.4...v7.0.5
+
 ## 7.0.4 (2024-12-09)
 
 ## What's Changed
