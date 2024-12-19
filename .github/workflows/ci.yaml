@@ -39,6 +39,7 @@ jobs:
         os: ${{ fromJSON(needs.vars.outputs.runner-os) }}
     runs-on: ${{ matrix.os }}
     permissions:
+      attestations: write
       id-token: write
     steps:
       - name: Bootstrap Lix
