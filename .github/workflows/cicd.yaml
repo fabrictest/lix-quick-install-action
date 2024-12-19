@@ -41,7 +41,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Bootstrap Lix
-        uses: fabrictest/lix-quick-install-action@ddc18dc9605383cd5c31573cb758324c881aa2fc # v7.0.4
+        uses: fabrictest/lix-quick-install-action@adf607f89b402b54025ff0a3b459be95559caa72 # v7.1.0
       - name: Set up Magic Nix Cache
         uses: DeterminateSystems/magic-nix-cache-action@v8
       - name: Check out repository
