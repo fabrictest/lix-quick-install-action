@@ -16,19 +16,42 @@ jobs:
   vars:
     name: Resolve variables
     runs-on: ubuntu-latest
+    outputs:
+      json: ${{ steps.vars.outputs.json }}
     steps:
-      - name: Supported runners
-        id: runner-os
+      - name: Resolve variables
+        id: vars
         shell: bash
         run: |
-          printf 'json=["macos-%s", "macos-13", "ubuntu-%s"]' "$RUNNER_MACOS_VERSION" "$RUNNER_UBUNTU_VERSION" >>"$GITHUB_OUTPUT"
+          {
+            printf 'json<<JSON\n'
+            tee vars.json <<EOF
+          {
+            "runner-os": [
+              "macos-$RUNNER_MACOS_VERSION",
+              "macos-13",
+              "ubuntu-$RUNNER_UBUNTU_VERSION"
+            ],
+            "lix-version": [
+              "$LIX_2_90_VERSION",
+              "$LIX_2_91_VERSION"
+            ]
+          }
+          EOF
+            printf 'JSON\n'
+          } >>"$GITHUB_OUTPUT"
         env:
           # renovate: datasource=github-runners depName=macos
           RUNNER_MACOS_VERSION: "15"
           # renovate: datasource=github-runners depName=ubuntu
           RUNNER_UBUNTU_VERSION: "24.04"
-    outputs:
-      runner-os: ${{ steps.runner-os.outputs.json }}
+          LIX_2_90_VERSION: 2.90.0
+          LIX_2_91_VERSION: 2.91.1
+      - name: Upload variables file to GitHub
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: vars
+          path: vars.json
   build:
     name: Build
     needs:
@@ -36,7 +59,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: ${{ fromJSON(needs.vars.outputs.runner-os) }}
+        os: ${{ fromJSON(needs.vars.outputs.json).runner-os }}
     runs-on: ${{ matrix.os }}
     permissions:
       attestations: write
@@ -46,6 +69,8 @@ jobs:
         uses: fabrictest/lix-quick-install-action@ddc18dc9605383cd5c31573cb758324c881aa2fc # v7.0.4
       - name: Set up Magic Nix Cache
         uses: DeterminateSystems/magic-nix-cache-action@v8
+        with:
+          use-flakehub: false
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Build `/nix` tarballs
@@ -69,10 +94,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: ${{ fromJSON(needs.vars.outputs.runner-os) }}
-        lix-version:
-          - 2.91.1
-          - 2.90.0
+        os: ${{ fromJSON(needs.vars.outputs.json).runner-os }}
+        lix-version: ${{ fromJSON(needs.vars.outputs.json).lix-version }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out repository
@@ -103,7 +126,7 @@ jobs:
         id: lix-store-add
         shell: bash
         run: |
-          dd if=/dev/urandom of=probe bs=1024 count=1
+          git rev-parse HEAD >probe
           nix-store --add probe | xargs printf probe=%s\\n >>"$GITHUB_OUTPUT"
       - name: Verify that one can push such file to Cachix
         if: ${{ github.repository_owner == 'fabrictest' }}
